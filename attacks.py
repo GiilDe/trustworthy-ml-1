@@ -63,9 +63,8 @@ class PGDAttack:
             x.requires_grad = False
             x = x + self.alpha * \
                 np.sign(
-                    torch.mul(
-                        x.grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
-                    )
+                    (torch.mul(x.grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
+                     if self.early_stop else x.grad)
                 )
             x = torch.clip(x, x_original - self.eps, x_original + self.eps)
             x = torch.clip(x, 0, 1)
@@ -136,7 +135,6 @@ class NESBBoxPGDAttack:
                 loss = -loss
             return loss/(2*self.k*self.sigma)
 
-        mask = torch.ones(len(x))
         prev_gradient = torch.zeros_like(x)
         x_original = torch.clone(x)
         n_queries = [self.n]*len(x)
@@ -160,7 +158,9 @@ class NESBBoxPGDAttack:
             grad = grad.detach()
             x = x + self.alpha * \
                 np.sign(
-                    torch.mul(grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)))
+                    (torch.mul(grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
+                     if self.early_stop else grad)
+                )
             x = torch.clip(x, x_original - self.eps, x_original + self.eps)
             x = torch.clip(x, 0, 1)
 
@@ -198,6 +198,9 @@ class PGDEnsembleAttack:
         self.rand_init = rand_init
         self.early_stop = early_stop
         self.loss_func = nn.CrossEntropyLoss()
+    
+    def forward(self, x):
+        return torch.stack([model(x) for model in self.models], dim=1).mean(dim=1)
 
     def execute(self, x, y, targeted=False):
         """
@@ -206,4 +209,32 @@ class PGDEnsembleAttack:
         attacks. The method returns the adversarially perturbed samples, which
         lie in the ranges [0, 1] and [x-eps, x+eps].
         """
-        pass  # FILL ME
+        x_original = torch.clone(x)
+        if self.rand_init:
+            x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
+            x = torch.clip(x, 0, 1)
+        for _ in range(self.n):
+            x.requires_grad = True
+            x.grad = None
+            outputs = self.forward(x)
+            if self.early_stop:
+                outputs = outputs.argmax(dim=1)
+                mask = outputs == y if targeted else outputs != y
+                if torch.sum(mask) == len(y):
+                    return x
+                mask = ~mask
+
+            loss = self.loss_func(outputs, y)
+            if targeted:
+                loss = -loss
+            loss.sum().backward()
+            x.requires_grad = False
+            x = x + self.alpha * \
+                np.sign(
+                    (torch.mul(x.grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
+                     if self.early_stop else x.grad)
+                )
+            x = torch.clip(x, x_original - self.eps, x_original + self.eps)
+            x = torch.clip(x, 0, 1)
+
+        return x
