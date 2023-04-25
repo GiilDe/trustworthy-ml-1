@@ -43,7 +43,7 @@ class PGDAttack:
         """
         x_original = torch.clone(x)
         if self.rand_init:
-            x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
+            x = x + torch.empty_like(x).uniform_(-self.eps, self.eps)
             x = torch.clip(x, 0, 1)
         for _ in range(self.n):
             x.requires_grad = True
@@ -62,7 +62,7 @@ class PGDAttack:
             loss.sum().backward()
             x.requires_grad = False
             x = x + self.alpha * \
-                np.sign(
+                torch.sign(
                     (torch.mul(x.grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
                      if self.early_stop else x.grad)
                 )
@@ -121,7 +121,7 @@ class NESBBoxPGDAttack:
         each sample in x.
         """
         def estimate_grad():
-            loss = torch.zeros(x.shape)
+            loss = torch.zeros_like(x)
             for _ in range(self.k):
                 noize = torch.normal(
                     mean=0, std=self.sigma, size=x.shape, dtype=x.dtype, device=x.device)
@@ -139,10 +139,10 @@ class NESBBoxPGDAttack:
         x_original = torch.clone(x)
         n_queries = [self.n]*len(x)
         if self.rand_init:
-            x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
+            x = x + torch.empty_like(x).uniform_(-self.eps, self.eps)
             x = torch.clip(x, 0, 1)
         for i in range(self.n):
-            print(i)
+            # print(i)
             outputs = self.model(x)
             if self.early_stop:
                 outputs = outputs.argmax(dim=1)
@@ -157,7 +157,7 @@ class NESBBoxPGDAttack:
                 (1 - self.momentum)*estimate_grad()
             grad = grad.detach()
             x = x + self.alpha * \
-                np.sign(
+                torch.sign(
                     (torch.mul(grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
                      if self.early_stop else grad)
                 )
@@ -211,7 +211,7 @@ class PGDEnsembleAttack:
         """
         x_original = torch.clone(x)
         if self.rand_init:
-            x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
+            x = x + torch.empty_like(x).uniform_(-self.eps, self.eps)
             x = torch.clip(x, 0, 1)
         for _ in range(self.n):
             x.requires_grad = True
@@ -230,7 +230,7 @@ class PGDEnsembleAttack:
             loss.sum().backward()
             x.requires_grad = False
             x = x + self.alpha * \
-                np.sign(
+                torch.sign(
                     (torch.mul(x.grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
                      if self.early_stop else x.grad)
                 )
