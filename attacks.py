@@ -41,7 +41,6 @@ class PGDAttack:
         performs random initialization and early stopping, depending on the 
         self.rand_init and self.early_stop flags.
         """
-        mask = torch.ones(len(x))
         x_original = torch.clone(x)
         if self.rand_init:
             x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
@@ -50,6 +49,13 @@ class PGDAttack:
             x.requires_grad = True
             x.grad = None
             outputs = self.model(x)
+            if self.early_stop:
+                outputs = outputs.argmax(dim=1)
+                mask = outputs == y if targeted else outputs != y
+                if torch.sum(mask) == len(y):
+                    return x
+                mask = ~mask
+
             loss = self.loss_func(outputs, y)
             if targeted:
                 loss = -loss
@@ -63,12 +69,6 @@ class PGDAttack:
                 )
             x = torch.clip(x, x_original - self.eps, x_original + self.eps)
             x = torch.clip(x, 0, 1)
-            if self.early_stop:
-                outputs = outputs.argmax(dim=1)
-                mask = outputs == y if targeted else outputs != y
-                if torch.sum(mask) == len(y):
-                    return x
-                mask = ~mask
 
         return x
 
@@ -132,6 +132,8 @@ class NESBBoxPGDAttack:
                 loss += torch.mul(noize_minus, self.loss_func(self.model(x + noize),
                                   y).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
 
+            if targeted:
+                loss = -loss
             return loss/(2*self.k*self.sigma)
 
         mask = torch.ones(len(x))
@@ -142,21 +144,8 @@ class NESBBoxPGDAttack:
             x = x + torch.FloatTensor(x.shape).uniform_(-self.eps, self.eps)
             x = torch.clip(x, 0, 1)
         for i in range(self.n):
-            x.requires_grad = True
-            x.grad = None
+            print(i)
             outputs = self.model(x)
-            loss = self.loss_func(outputs, y)
-            if targeted:
-                loss = -loss
-            loss.sum().backward()
-            x.requires_grad = False
-            grad = self.momentum*prev_gradient + \
-                (1 - self.momentum)*estimate_grad()
-            x = x + self.alpha * \
-                np.sign(
-                    torch.mul(grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)))
-            x = torch.clip(x, x_original - self.eps, x_original + self.eps)
-            x = torch.clip(x, 0, 1)
             if self.early_stop:
                 outputs = outputs.argmax(dim=1)
                 mask = outputs == y if targeted else outputs != y
@@ -165,9 +154,19 @@ class NESBBoxPGDAttack:
                 if torch.sum(mask) == len(y):
                     return x
                 mask = ~mask
+
+            grad = self.momentum*prev_gradient + \
+                (1 - self.momentum)*estimate_grad()
+            grad = grad.detach()
+            x = x + self.alpha * \
+                np.sign(
+                    torch.mul(grad, mask.unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)))
+            x = torch.clip(x, x_original - self.eps, x_original + self.eps)
+            x = torch.clip(x, 0, 1)
+
             prev_gradient = grad
 
-        return x, n_queries
+        return x, torch.tensor(n_queries)
 
 
 class PGDEnsembleAttack:

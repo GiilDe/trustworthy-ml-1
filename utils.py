@@ -100,7 +100,7 @@ def run_blackbox_attack(attack, data_loader, targeted, device, n_classes=4):
         perturbed_xs.append(perturbed_x)
         labels.append(t if targeted else y)
         n_queries.append(batch_n_queries)
-    return torch.cat(perturbed_xs), torch.cat(labels), itertools.chain.from_iterable(n_queries)
+    return torch.cat(perturbed_xs), torch.cat(labels), torch.cat(n_queries)
 
 def compute_attack_success(model, x_adv, y, batch_size, targeted, device):
     """
