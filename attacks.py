@@ -50,8 +50,8 @@ class PGDAttack:
             x.grad = None
             outputs = self.model(x)
             if self.early_stop:
-                outputs = outputs.argmax(dim=1)
-                mask = outputs == y if targeted else outputs != y
+                outputs_ids = outputs.argmax(dim=1)
+                mask = outputs_ids == y if targeted else outputs_ids != y
                 if torch.sum(mask) == len(y):
                     return x
                 mask = ~mask
@@ -128,7 +128,7 @@ class NESBBoxPGDAttack:
                 noize_minus = -noize
                 loss += torch.mul(noize, self.loss_func(self.model(x + noize),
                                   y).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
-                loss += torch.mul(noize_minus, self.loss_func(self.model(x + noize),
+                loss += torch.mul(noize_minus, self.loss_func(self.model(x + noize_minus),
                                   y).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
 
             if targeted:
@@ -145,8 +145,8 @@ class NESBBoxPGDAttack:
             # print(i)
             outputs = self.model(x)
             if self.early_stop:
-                outputs = outputs.argmax(dim=1)
-                mask = outputs == y if targeted else outputs != y
+                outputs_ids = outputs.argmax(dim=1)
+                mask = outputs_ids == y if targeted else outputs_ids != y
                 n_queries = [min(n_queries_sample, i) if mask_sample else n_queries_sample for n_queries_sample,
                              mask_sample in zip(n_queries, mask)]
                 if torch.sum(mask) == len(y):
@@ -218,8 +218,8 @@ class PGDEnsembleAttack:
             x.grad = None
             outputs = self.forward(x)
             if self.early_stop:
-                outputs = outputs.argmax(dim=1)
-                mask = outputs == y if targeted else outputs != y
+                outputs_ids = outputs.argmax(dim=1)
+                mask = outputs_ids == y if targeted else outputs_ids != y
                 if torch.sum(mask) == len(y):
                     return x
                 mask = ~mask

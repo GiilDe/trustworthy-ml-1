@@ -25,23 +25,23 @@ model.eval()
 dataset = TMLDataset(transform=transforms.ToTensor())
 data_loader = torch.utils.data.DataLoader(dataset, batch_size=consts.BATCH_SIZE)
 
-# # test accuracy
-# batches_acc = compute_accuracy(model, data_loader, device)
-# print(f'The test accuracy of the model is: {batches_acc:0.4f}')
+# test accuracy
+batches_acc = compute_accuracy(model, data_loader, device)
+print(f'The test accuracy of the model is: {batches_acc:0.4f}')
 
 # init attacks
-# wb_attack = PGDAttack(model)
+wb_attack = PGDAttack(model)
 bb_attack = NESBBoxPGDAttack(model)
 
-# # execute white-box
-# print('White-box attack:')
-# for targeted in [False, True]:
-#     x_adv, y = run_whitebox_attack(wb_attack, data_loader, targeted, device)
-#     sr = compute_attack_success(model, x_adv, y, consts.BATCH_SIZE, targeted, device)
-#     if targeted:
-#         print(f'\t- targeted success rate: {sr:0.4f}')
-#     else:
-#         print(f'\t- untargeted success rate: {sr:0.4f}')
+# execute white-box
+print('White-box attack:')
+for targeted in [False, True]:
+    x_adv, y = run_whitebox_attack(wb_attack, data_loader, targeted, device)
+    sr = compute_attack_success(model, x_adv, y, consts.BATCH_SIZE, targeted, device)
+    if targeted:
+        print(f'\t- targeted success rate: {sr:0.4f}')
+    else:
+        print(f'\t- untargeted success rate: {sr:0.4f}')
 
 # excecute targeted and untargeted black-box attacks w/ and wo/ momentum
 n_queries_all = []

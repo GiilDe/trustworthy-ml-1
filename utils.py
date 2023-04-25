@@ -70,7 +70,7 @@ def run_whitebox_attack(attack, data_loader, targeted, device, n_classes=4):
         x = x.to(device)
         y = y.to(device)
         if targeted:
-            t = (y+torch.randint(1, n_classes, size=(len(y),)))%n_classes
+            t = (y+torch.randint(1, n_classes, size=(len(y),), device=y.device))%n_classes
         perturbed_x = attack.execute(x, t if targeted else y, targeted)
         perturbed_xs.append(perturbed_x)
         labels.append(t if targeted else y)
@@ -95,7 +95,7 @@ def run_blackbox_attack(attack, data_loader, targeted, device, n_classes=4):
         x = x.to(device)
         y = y.to(device)
         if targeted:
-            t = (y+torch.randint(1, n_classes, size=(len(y),)))%n_classes
+            t = (y+torch.randint(1, n_classes, size=(len(y),), device=y.device))%n_classes
         perturbed_x, batch_n_queries = attack.execute(x, t if targeted else y, targeted)
         perturbed_xs.append(perturbed_x)
         labels.append(t if targeted else y)
