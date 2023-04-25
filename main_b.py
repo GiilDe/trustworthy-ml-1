@@ -54,7 +54,6 @@ print('Targeted attacks\' transferability:')
 with np.printoptions(precision=4):
     print(transfer_success)
 
-exit()
 # ensemble attacks against model 0
 attack = PGDEnsembleAttack(models[1:], eps=8/255., early_stop=False)
 # untargeted attacks

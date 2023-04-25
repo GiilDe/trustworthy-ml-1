@@ -6,7 +6,7 @@ import models
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
-import itertools
+
 
 def load_pretrained_cnn(cnn_id, n_classes=4, models_dir='trained-models/'):
     """
@@ -121,7 +121,7 @@ def binary(num):
     binary representation (in big-endian, where the string only
     contains '0' and '1' characters).
     """
-    pass # FILL ME
+    return str(np.asarray(num, dtype=np.float32).view(np.int32))
 
 def float32(binary):
     """
@@ -129,7 +129,7 @@ def float32(binary):
     binary representations of float32 numbers into float32 and returns the
     result.
     """
-    pass # FILL ME
+    return float(eval(binary))
 
 def random_bit_flip(w):
     """
@@ -138,4 +138,10 @@ def random_bit_flip(w):
     1- The weight with the bit flipped
     2- The index of the flipped bit in {0, 1, ..., 31}
     """
-    pass # FILL ME
+    binary_w = binary(w)
+    idx = np.random.randint(0, len(binary_w))
+    flipped_binary_w = binary_w[:idx] + ('0' if binary_w[idx]=='1' else '1') + binary_w[idx+1:]
+    return float32(flipped_binary_w), idx
+
+def RAD(original_acc, bit_flip_acc):
+    return (original_acc - bit_flip_acc)/original_acc
