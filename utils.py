@@ -6,6 +6,7 @@ import models
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
+import struct
 
 
 def load_pretrained_cnn(cnn_id, n_classes=4, models_dir='trained-models/'):
@@ -121,7 +122,7 @@ def binary(num):
     binary representation (in big-endian, where the string only
     contains '0' and '1' characters).
     """
-    return str(np.asarray(num, dtype=np.float32).view(np.int32))
+    return ''.join('{:0>8b}'.format(c) for c in struct.pack('!f', num))
 
 def float32(binary):
     """
@@ -129,7 +130,7 @@ def float32(binary):
     binary representations of float32 numbers into float32 and returns the
     result.
     """
-    return float(eval(binary))
+    return struct.unpack('!f',struct.pack('!I', int(binary, 2)))[0]
 
 def random_bit_flip(w):
     """

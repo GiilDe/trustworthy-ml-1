@@ -44,7 +44,7 @@ for layer_name in layers:
         W.requires_grad = False
         for _ in range(consts.BF_PER_LAYER):
             # FILL ME: flip a random bit in a randomly picked weight, measure RAD, and restore weight
-            weight_idx = [np.random.randint(0, dim) for dim in W.shape]
+            weight_idx = tuple([np.random.randint(0, dim) for dim in W.shape])
             weight_original = W[weight_idx].clone()
             W[weight_idx], bf_idx = utils.random_bit_flip(W[weight_idx])
             bit_flip_acc = utils.compute_accuracy(model, data_loader, device)
