@@ -166,7 +166,7 @@ class NESBBoxPGDAttack:
 
             prev_gradient = grad
 
-        return x, torch.tensor(n_queries)
+        return x, torch.mul(torch.tensor(n_queries), 2*self.k)
 
 
 class PGDEnsembleAttack:
