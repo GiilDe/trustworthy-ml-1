@@ -150,7 +150,7 @@ class NESBBoxPGDAttack:
                 n_queries = [min(n_queries_sample, i) if mask_sample else n_queries_sample for n_queries_sample,
                              mask_sample in zip(n_queries, mask)]
                 if torch.sum(mask) == len(y):
-                    return x, torch.tensor(n_queries)
+                    return x, torch.mul(torch.tensor(n_queries), 2*self.k)
                 mask = ~mask
 
             grad = self.momentum*prev_gradient + \
