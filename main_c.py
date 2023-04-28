@@ -43,7 +43,6 @@ for layer_name in layers:
         W = layer.weight
         W.requires_grad = False
         for _ in range(consts.BF_PER_LAYER):
-            # FILL ME: flip a random bit in a randomly picked weight, measure RAD, and restore weight
             weight_idx = tuple([np.random.randint(0, dim) for dim in W.shape])
             weight_original = W[weight_idx].clone()
             W[weight_idx], bf_idx = utils.random_bit_flip(W[weight_idx])
@@ -61,8 +60,6 @@ print(f'RAD>10%: {np.sum(RADs_all>0.1)/RADs_all.size:0.4f}')
             
 # boxplots: bit-flip index vs. RAD
 plt.figure()
-# FILL ME
-
 plt.boxplot([RADs_bf_idx[bf_idx] for bf_idx in range(len(RADs_bf_idx))])
 plt.xlabel('Bit-flip index')
 plt.ylabel('RAD')
