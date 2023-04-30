@@ -122,7 +122,7 @@ def binary(num):
     binary representation (in big-endian, where the string only
     contains '0' and '1' characters).
     """
-    return ''.join('{:0>8b}'.format(c) for c in struct.pack('!f', num))
+    return ''.join('{:0>8b}'.format(c) for c in struct.pack('!f', num))[::-1]
 
 def float32(binary):
     """
@@ -130,7 +130,7 @@ def float32(binary):
     binary representations of float32 numbers into float32 and returns the
     result.
     """
-    return struct.unpack('!f',struct.pack('!I', int(binary, 2)))[0]
+    return struct.unpack('!f',struct.pack('!I', int(binary[::-1], 2)))[0]
 
 def random_bit_flip(w):
     """

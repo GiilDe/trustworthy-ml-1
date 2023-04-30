@@ -144,7 +144,6 @@ class NESBBoxPGDAttack:
             x = x + torch.empty_like(x).uniform_(-self.eps, self.eps)
             x = torch.clip(x, 0, 1)
         for i in range(self.n):
-            # print(i)
             outputs = self.model(x)
             if self.early_stop:
                 outputs_ids = outputs.argmax(dim=1)
