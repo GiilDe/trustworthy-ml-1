@@ -53,6 +53,7 @@ class PGDAttack:
                 outputs_ids = outputs.argmax(dim=1)
                 mask = outputs_ids == y if targeted else outputs_ids != y
                 if torch.sum(mask) == len(y):
+                    assert torch.allclose(x_original, x, atol=self.eps)
                     return x
                 mask = ~mask
 
@@ -69,6 +70,7 @@ class PGDAttack:
             x = torch.clip(x, x_original - self.eps, x_original + self.eps)
             x = torch.clip(x, 0, 1)
 
+        assert torch.allclose(x_original, x, atol=self.eps)
         return x
 
 
@@ -150,6 +152,7 @@ class NESBBoxPGDAttack:
                 n_queries = [min(n_queries_sample, i) if mask_sample else n_queries_sample for n_queries_sample,
                              mask_sample in zip(n_queries, mask)]
                 if torch.sum(mask) == len(y):
+                    assert torch.allclose(x_original, x, atol=self.eps)
                     return x, torch.mul(torch.tensor(n_queries), 2*self.k)
                 mask = ~mask
 
@@ -166,6 +169,7 @@ class NESBBoxPGDAttack:
 
             prev_gradient = grad
 
+        assert torch.allclose(x_original, x, atol=self.eps)
         return x, torch.mul(torch.tensor(n_queries), 2*self.k)
 
 
@@ -221,6 +225,7 @@ class PGDEnsembleAttack:
                 outputs_ids = outputs.argmax(dim=1)
                 mask = outputs_ids == y if targeted else outputs_ids != y
                 if torch.sum(mask) == len(y):
+                    assert torch.allclose(x_original, x, atol=self.eps)
                     return x
                 mask = ~mask
 
@@ -237,4 +242,5 @@ class PGDEnsembleAttack:
             x = torch.clip(x, x_original - self.eps, x_original + self.eps)
             x = torch.clip(x, 0, 1)
 
+        assert torch.allclose(x_original, x, atol=self.eps)
         return x
